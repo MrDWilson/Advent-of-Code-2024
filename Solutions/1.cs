@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using AdventOfCode.Models;
 
 namespace AdventOfCode.Solutions;
