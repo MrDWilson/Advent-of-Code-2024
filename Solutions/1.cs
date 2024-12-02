@@ -2,30 +2,22 @@ using AdventOfCode.Models;
 
 namespace AdventOfCode.Solutions;
 
-public class Day1 : ISolution
+public class Day1 : SolutionBase
 {
-    public int Day => 1;
+    public override int Day => 1;
 
-    public void Solve(SolutionType type, string[] content)
+    public override void Solve(SolutionType type, string[] content)
     {
-        var lines = content.Select(x => 
+        var lines = ToIntArray(content);
+        var listOne = lines.Select(parts => parts.First()).ToList();
+        var listTwo = lines.Select(parts => parts.Last()).ToList();
+        var result = type switch
         {
-            var items = x.Split("   ");
-            return new { First = items[0], Second = items[1] };
-        });
-        var listOne = lines.Select(x => int.Parse(x.First.ToString()));
-        var listTwo = lines.Select(x => int.Parse(x.Second.ToString()));
+            SolutionType.First => listOne.Order().Zip(listTwo.Order(), (x, y) => Math.Abs(x - y)).Sum(),
+            SolutionType.Second => listOne.Sum(x => x * listTwo.Count(y => y == x)),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
+        };
 
-        if (type is SolutionType.First)
-        {
-            var zipped = listOne.OrderBy(x => x).Zip(listTwo.OrderBy(x => x));
-
-            var totalDistance = zipped.Sum(values => Math.Abs(values.First - values.Second));
-            Console.WriteLine(totalDistance);
-        }
-        else
-        {
-            Console.WriteLine(listOne.Sum(x => x * listTwo.Count(y => y == x)));
-        }
+        Console.WriteLine(result);
     }
 }

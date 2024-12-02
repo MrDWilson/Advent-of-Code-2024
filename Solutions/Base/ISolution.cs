@@ -4,6 +4,6 @@ namespace AdventOfCode.Solutions;
 
 public interface ISolution
 {
-    int Day { get; }
-    void Solve(SolutionType type, string[] content);
+    public int Day { get; }
+    public void Solve(SolutionType type, string[] content);
 }
