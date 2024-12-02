@@ -1,6 +1,6 @@
 using AdventOfCode.Models;
 
-namespace AdventOfCode.Solutions;
+namespace AdventOfCode.Solutions.Base;
 
 public abstract class SolutionBase : ISolution
 {

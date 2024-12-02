@@ -1,6 +1,6 @@
 ﻿using AdventOfCode.Models;
 using AdventOfCode.Services;
-using AdventOfCode.Solutions;
+using AdventOfCode.Solutions.Base;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

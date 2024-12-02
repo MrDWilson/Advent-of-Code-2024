@@ -1,5 +1,5 @@
 using AdventOfCode.Models;
-using AdventOfCode.Solutions;
+using AdventOfCode.Solutions.Base;
 
 namespace AdventOfCode.Services;
 
