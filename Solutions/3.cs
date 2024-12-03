@@ -2,10 +2,11 @@ using System.Text.RegularExpressions;
 using AdventOfCode.Models;
 using AdventOfCode.Services;
 using AdventOfCode.Solutions.Base;
+using Microsoft.Extensions.Options;
 
 namespace AdventOfCode.Solutions;
 
-public partial class Day3(IFileLoader _loader) : SolutionBase(_loader)
+public partial class Day3(IFileLoader _loader, IOptions<SolutionOptions> _options) : SolutionBase(_loader, _options)
 {
     public override int Day => 3;
 
@@ -15,12 +16,12 @@ public partial class Day3(IFileLoader _loader) : SolutionBase(_loader)
     [GeneratedRegex(@"(mul|do|don't)\((?:(\d+),(\d+))?\)")]
     private static partial Regex Exp2();
 
-    public override async Task Solve(SolutionType solutionType, RunType runType)
+    public override async Task Solve()
     {
-        var instructions = await Loader.LoadRaw(Day, solutionType, runType);
+        var instructions = await Loader.LoadRaw(Day, Options.SolutionType, Options.RunType);
 
         int sum = 0;
-        if (solutionType is SolutionType.First)
+        if (Options.SolutionType is SolutionType.First)
         {
             sum = Exp1().Matches(instructions)
                 .Cast<Match>()

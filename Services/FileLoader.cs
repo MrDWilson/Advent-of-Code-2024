@@ -14,8 +14,8 @@ public class FileLoader : IFileLoader
     {
         var filetype = (solutionType, runType) switch
         {
-            (SolutionType.First, RunType.Test) => day + "-1-test",
-            (SolutionType.Second, RunType.Test) => day + "-2-test",
+            (SolutionType.First, RunType.Test) => day + "-1",
+            (SolutionType.Second, RunType.Test) => day + "-2",
             _ => day.ToString()
         };
 

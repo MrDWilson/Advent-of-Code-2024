@@ -18,8 +18,10 @@ foreach (var solutionType in solutionTypes)
     builder.Services.AddTransient(typeof(ISolution), solutionType);
 }
 
+builder.Services.Configure<SolutionOptions>(builder.Configuration.GetSection(SolutionOptions.Solution));
+
 using IHost host = builder.Build();
 
 var runner = host.Services.GetRequiredService<ISolutionRunner>();
 
-await runner.Run(3, SolutionType.Second, RunType.Full);
+await runner.Run();

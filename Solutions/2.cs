@@ -1,21 +1,22 @@
 using AdventOfCode.Models;
 using AdventOfCode.Services;
 using AdventOfCode.Solutions.Base;
+using Microsoft.Extensions.Options;
 
 namespace AdventOfCode.Solutions;
 
-public class Day2(IFileLoader _loader) : SolutionBase(_loader)
+public class Day2(IFileLoader _loader, IOptions<SolutionOptions> _options) : SolutionBase(_loader, _options)
 {
     public override int Day => 2;
 
-    public override async Task Solve(SolutionType solutionType, RunType runType)
+    public override async Task Solve()
     {
-        var reports = await Loader.Load<int>(Day, solutionType, runType);
-        var safeCount = reports.Count(x => solutionType switch 
+        var reports = await Loader.Load<int>(Day, Options.SolutionType, Options.RunType);
+        var safeCount = reports.Count(x => Options.SolutionType switch 
         {
             SolutionType.First => ReportIsSafe(x),
             SolutionType.Second => ReportIsSafe(x) || ReportIsSafeLeniant(x),
-            _ => throw new ArgumentOutOfRangeException(nameof(solutionType))
+            _ => throw new ArgumentOutOfRangeException(nameof(Options.SolutionType))
         });
 
         Console.WriteLine(safeCount);
