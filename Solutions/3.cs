@@ -11,7 +11,7 @@ public partial class Day3 : SolutionBase
     [GeneratedRegex(@"mul\((\d+,\d+)\)")]
     private static partial Regex Exp1();
 
-    [GeneratedRegex(@"((mul|do|don\'t))\((\d+,\d+)?\)")]
+    [GeneratedRegex(@"(mul|do|don\'t)\((\d+,\d+)?\)")]
     private static partial Regex Exp2();
 
     public override void Solve(SolutionType type, string[] content)
@@ -39,7 +39,7 @@ public partial class Day3 : SolutionBase
                     case "mul":
                         if (enabled)
                         {
-                            var numbers = match.Groups[3].Value.Split(",");
+                            var numbers = match.Groups[2].Value.Split(",");
                             results.Add((int.Parse(numbers.First()), int.Parse(numbers.Last())));
                         }
                         break;
