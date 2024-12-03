@@ -22,4 +22,4 @@ using IHost host = builder.Build();
 
 var runner = host.Services.GetRequiredService<ISolutionRunner>();
 
-await runner.Run(1, SolutionType.First, RunType.Full);
+await runner.Run(3, SolutionType.Second, RunType.Full);
