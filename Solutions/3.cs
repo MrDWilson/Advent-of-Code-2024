@@ -6,9 +6,9 @@ using Microsoft.Extensions.Options;
 
 namespace AdventOfCode.Solutions;
 
-public partial class Day3(IFileLoader _loader, IOptions<SolutionOptions> _options) : SolutionBase(_loader, _options)
+public partial class Day3(IFileLoader loader, IOptions<SolutionOptions> options) : ISolution
 {
-    public override int Day => 3;
+    public int Day => 3;
 
     [GeneratedRegex(@"mul\((\d+),(\d+)\)")]
     private static partial Regex Exp1();
@@ -16,12 +16,12 @@ public partial class Day3(IFileLoader _loader, IOptions<SolutionOptions> _option
     [GeneratedRegex(@"(mul|do|don't)\((?:(\d+),(\d+))?\)")]
     private static partial Regex Exp2();
 
-    public override async Task Solve()
+    public async Task Solve()
     {
-        var instructions = await Loader.LoadRaw(Day, Options.SolutionType, Options.RunType);
+        var instructions = await loader.LoadRaw(Day, options.Value.SolutionType, options.Value.RunType);
 
         int sum = 0;
-        if (Options.SolutionType is SolutionType.First)
+        if (options.Value.SolutionType is SolutionType.First)
         {
             sum = Exp1().Matches(instructions)
                 .Cast<Match>()

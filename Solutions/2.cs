@@ -5,18 +5,18 @@ using Microsoft.Extensions.Options;
 
 namespace AdventOfCode.Solutions;
 
-public class Day2(IFileLoader _loader, IOptions<SolutionOptions> _options) : SolutionBase(_loader, _options)
+public class Day2(IFileLoader loader, IOptions<SolutionOptions> options) : ISolution
 {
-    public override int Day => 2;
+    public int Day => 2;
 
-    public override async Task Solve()
+    public async Task Solve()
     {
-        var reports = await Loader.Load<int>(Day, Options.SolutionType, Options.RunType);
-        var safeCount = reports.Count(x => Options.SolutionType switch 
+        var reports = await loader.Load<int>(Day, options.Value.SolutionType, options.Value.RunType);
+        var safeCount = reports.Count(x => options.Value.SolutionType switch 
         {
             SolutionType.First => ReportIsSafe(x),
             SolutionType.Second => ReportIsSafe(x) || ReportIsSafeLeniant(x),
-            _ => throw new ArgumentOutOfRangeException(nameof(Options.SolutionType))
+            _ => throw new ArgumentOutOfRangeException(nameof(options.Value.SolutionType))
         });
 
         Console.WriteLine(safeCount);
