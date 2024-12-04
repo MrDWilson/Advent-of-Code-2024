@@ -20,7 +20,8 @@ public class SolutionRunner(IEnumerable<ISolution> solutions, IOptions<SolutionO
             return;
         }
 
-        Console.WriteLine($"Running {options.Value.RunType} solution for day {options.Value.Day} {options.Value.SolutionType} part...");
-        await solution.Solve();
+        Console.WriteLine($"Day {options.Value.Day}, {options.Value.SolutionType} part, {options.Value.RunType} run");
+        Console.WriteLine($"https://adventofcode.com/2024/day/{options.Value.Day}");
+        Console.WriteLine($"Solution: {await solution.Solve()}");
     }    
 }

@@ -3,5 +3,5 @@ namespace AdventOfCode.Solutions;
 public interface ISolution
 {
     public int Day { get; }
-    public Task Solve();
+    public Task<int> Solve();
 }
