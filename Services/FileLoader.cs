@@ -5,6 +5,7 @@ namespace AdventOfCode.Services;
 public interface IFileLoader
 {
     Task<string> LoadRaw(int day, SolutionType solutionType, RunType runType);
+    Task<List<string>> LoadLines(int day, SolutionType solutionType, RunType runType);
     Task<List<List<T>>> Load<T>(int day, SolutionType solutionType, RunType runType);
 }
 
@@ -23,10 +24,15 @@ public class FileLoader : IFileLoader
         return await File.ReadAllTextAsync(Path.Combine("Files", filename));
     }
 
-    public async Task<List<List<T>>> Load<T>(int day, SolutionType solutionType, RunType runType)
+    public async Task<List<string>> LoadLines(int day, SolutionType solutionType, RunType runType)
     {
         var raw = await LoadRaw(day, solutionType, runType);
-        var lines = raw.Split("\n", StringSplitOptions.RemoveEmptyEntries);
+        return [.. raw.Split("\n", StringSplitOptions.RemoveEmptyEntries)];
+    }
+
+    public async Task<List<List<T>>> Load<T>(int day, SolutionType solutionType, RunType runType)
+    {
+        var lines = await LoadLines(day, solutionType, runType);
         var lineItems = lines.Select(line => line.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries));
         return lineItems.Select(x => x.Select(y => ChangeType<T>(y)).ToList()).ToList();
     }
