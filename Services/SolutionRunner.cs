@@ -1,5 +1,5 @@
 using AdventOfCode.Models;
-using AdventOfCode.Solutions.Base;
+using AdventOfCode.Solutions;
 using Microsoft.Extensions.Options;
 
 namespace AdventOfCode.Services;

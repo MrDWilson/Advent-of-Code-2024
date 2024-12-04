@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using AdventOfCode.Models;
 using AdventOfCode.Services;
-using AdventOfCode.Solutions.Base;
 using Microsoft.Extensions.Options;
 
 namespace AdventOfCode.Solutions;

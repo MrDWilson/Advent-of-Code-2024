@@ -1,6 +1,4 @@
-using AdventOfCode.Models;
-
-namespace AdventOfCode.Solutions.Base;
+namespace AdventOfCode.Solutions;
 
 public interface ISolution
 {
