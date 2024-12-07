@@ -8,7 +8,7 @@ public partial class Day5(IFileLoader loader, IOptions<SolutionOptions> options)
 {
     public int Day => 5;
 
-    public async Task<int> Solve()
+    public async Task<long> Solve()
     {
         var lines = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
 

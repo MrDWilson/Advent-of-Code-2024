@@ -9,7 +9,7 @@ public partial class Day6(IFileLoader loader, IOptions<SolutionOptions> options)
     public int Day => 6;
 
     private enum Direction { Up, Down, Left, Right };
-    public async Task<int> Solve()
+    public async Task<long> Solve()
     {
         var data = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
         var rows = data.Select(x => x.ToCharArray().ToList()).ToList();

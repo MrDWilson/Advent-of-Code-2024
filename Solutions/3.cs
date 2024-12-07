@@ -15,7 +15,7 @@ public partial class Day3(IFileLoader loader, IOptions<SolutionOptions> options)
     [GeneratedRegex(@"(mul|do|don't)\((?:(\d+),(\d+))?\)")]
     private static partial Regex Exp2();
 
-    public async Task<int> Solve()
+    public async Task<long> Solve()
     {
         var instructions = await loader.LoadRaw(Day, options.Value.SolutionType, options.Value.RunType);
 
