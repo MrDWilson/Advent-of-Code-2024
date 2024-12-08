@@ -6,6 +6,7 @@ public interface IFileLoader
 {
     Task<string> LoadRaw(int day, SolutionType solutionType, RunType runType);
     Task<List<string>> LoadLines(int day, SolutionType solutionType, RunType runType);
+    Task<List<List<char>>> LoadGrid(int day, SolutionType solutionType, RunType runType);
     Task<List<List<T>>> Load<T>(int day, SolutionType solutionType, RunType runType);
 }
 
@@ -28,6 +29,12 @@ public class FileLoader : IFileLoader
     {
         var raw = await LoadRaw(day, solutionType, runType);
         return [.. raw.Split("\n", StringSplitOptions.RemoveEmptyEntries)];
+    }
+
+    public async Task<List<List<char>>> LoadGrid(int day, SolutionType solutionType, RunType runType)
+    {
+        var lines = await LoadLines(day, solutionType, runType);
+        return lines.Select(x => x.ToCharArray().ToList()).ToList();
     }
 
     public async Task<List<List<T>>> Load<T>(int day, SolutionType solutionType, RunType runType)

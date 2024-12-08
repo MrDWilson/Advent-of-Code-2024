@@ -11,8 +11,7 @@ public partial class Day6(IFileLoader loader, IOptions<SolutionOptions> options)
     private enum Direction { Up, Down, Left, Right };
     public async Task<long> Solve()
     {
-        var data = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
-        var rows = data.Select(x => x.ToCharArray().ToList()).ToList();
+        var rows = await loader.LoadGrid(Day, options.Value.SolutionType, options.Value.RunType);
 
         int result;
         if (options.Value.SolutionType is SolutionType.First)

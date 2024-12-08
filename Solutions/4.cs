@@ -11,11 +11,10 @@ public partial class Day4(IFileLoader loader, IOptions<SolutionOptions> options)
     public async Task<long> Solve()
     {
         
-        var lines = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
-        var grid = lines.Select(x => x.ToCharArray()).ToArray();
+        var grid = await loader.LoadGrid(Day, options.Value.SolutionType, options.Value.RunType);
 
-        int rowCount = grid.Length;
-        int colCount = grid[0].Length;
+        int rowCount = grid.Count;
+        int colCount = grid[0].Count;
 
         int totalMatches;
         if (options.Value.SolutionType is SolutionType.First)
@@ -79,7 +78,7 @@ public partial class Day4(IFileLoader loader, IOptions<SolutionOptions> options)
         }
     }
 
-    private static string ExtractWord(char[][] grid, IEnumerable<(int row, int col)> positions)
+    private static string ExtractWord(List<List<char>> grid, IEnumerable<(int row, int col)> positions)
     {
         return new string(positions.Select(pos => grid[pos.row][pos.col]).ToArray());
     }

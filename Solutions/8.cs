@@ -11,8 +11,7 @@ public partial class Day8(IFileLoader loader, IOptions<SolutionOptions> options)
 
     public async Task<long> Solve()
     {
-        var data = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
-        var rows = data.Select(x => x.ToCharArray().ToList()).ToList();
+        var rows = await loader.LoadGrid(Day, options.Value.SolutionType, options.Value.RunType);
         var coords = rows
             .SelectMany((row, rowIndex) => row.Select((c, colIndex) => (c, rowIndex, colIndex)))
             .Where(x => x.c != '.')
