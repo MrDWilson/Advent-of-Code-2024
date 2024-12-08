@@ -13,8 +13,15 @@ public partial class Day8(IFileLoader loader, IOptions<SolutionOptions> options)
     {
         var data = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
         var rows = data.Select(x => x.ToCharArray().ToList()).ToList();
-        var antennas = rows.SelectMany(x => x).Where(x => x is not '.').GroupBy(x => x).Where(x => x.Count() > 1);
-        var coords = antennas.ToDictionary(x => x.Key, x => GetCoords(rows, x.Key));
+        var coords = rows
+            .SelectMany((row, rowIndex) => row.Select((c, colIndex) => (c, rowIndex, colIndex)))
+            .Where(x => x.c != '.')
+            .GroupBy(x => x.c)
+            .Where(g => g.Count() > 1)
+            .ToDictionary(
+                g => g.Key, 
+                g => g.Select(x => new Point(x.rowIndex, x.colIndex)).ToList()
+            );
         
         HashSet<Point> allAntinodes = [];
         foreach (var positions in coords.Values)
@@ -30,10 +37,7 @@ public partial class Day8(IFileLoader loader, IOptions<SolutionOptions> options)
 
                 if (options.Value.SolutionType is SolutionType.First)
                 {
-                    foreach (var validAntinode in antinodes.Where(x => !OutOfBounds(x, rows)))
-                    {
-                        allAntinodes.Add(validAntinode);
-                    }
+                    allAntinodes.UnionWith(antinodes.Where(a => !OutOfBounds(a, rows)));
                 }
                 else
                 {
@@ -50,29 +54,12 @@ public partial class Day8(IFileLoader loader, IOptions<SolutionOptions> options)
                         distance = secondDistance;
                     }
 
-                    foreach (var everyAntenna in coords.SelectMany(x => x.Value).ToHashSet())
-                    {
-                        allAntinodes.Add(everyAntenna);
-                    }
+                    allAntinodes.UnionWith(coords.Values.SelectMany(v => v));
                 }
             }
         }
 
         return allAntinodes.Count;
-    }
-
-    private static IEnumerable<Point> GetCoords(List<List<char>> rows, char c)
-    {
-        foreach (var (rowIndex, row) in rows.Index())
-        {
-            foreach (var (colIndex, col) in row.Index())
-            {
-                if (col == c)
-                {
-                    yield return new(rowIndex, colIndex);
-                }
-            }
-        }
     }
 
     private static (Point one, Point two) GetAntinodeDistances(Point one, Point two)
