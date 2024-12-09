@@ -40,13 +40,25 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
         }
         else
         {
-            var currentId = int.Parse(storageBytes[storageBytes.FindLastIndex(x => x is not ".")]);
+            var currentId = long.Parse(storageBytes[storageBytes.FindLastIndex(x => x is not ".")]);
             while (currentId >= 0)
             {
                 var byteCount = storageBytes.Count(x => x == currentId.ToString());
 
                 var currentIndex = storageBytes.IndexOf(currentId.ToString());
-                var spaceIndex = new string(storageBytes.SelectMany(x => x).ToArray()).IndexOf(new string(Enumerable.Repeat('.', byteCount).ToArray()));
+
+                var spaceIndex = -1;
+                var groupIndex = 0;
+                foreach (var group in GroupAdjacent(storageBytes))
+                {
+                    if (group.Key is "." && group.Value >= byteCount)
+                    {
+                        spaceIndex = groupIndex;
+                        break;
+                    }
+
+                    groupIndex += group.Value;
+                }
 
                 if (spaceIndex is not -1 && spaceIndex < currentIndex)
                 {
@@ -63,6 +75,33 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
         }
 
         return storageBytes.Index().Select(x => x.Item is "." ? 0 : long.Parse(x.Item) * x.Index).Sum();
+    }
+
+    private static IEnumerable<KeyValuePair<string, int>> GroupAdjacent(IEnumerable<string> sequence)
+    {
+        using var iter = sequence.GetEnumerator();
+
+        if (iter.MoveNext())
+        {
+            var prevItem = iter.Current;
+            var runCount = 1;
+
+            while (iter.MoveNext())
+            {
+                if (prevItem == iter.Current)
+                {
+                    ++runCount;
+                }
+                else
+                {
+                    yield return new KeyValuePair<string, int>(prevItem, runCount);
+                    prevItem = iter.Current;
+                    runCount = 1;
+                }
+            }
+
+            yield return new KeyValuePair<string, int>(prevItem, runCount);
+        }
     }
 
     private static bool IsSorted(IEnumerable<string> data) => data.Count() == (data.TakeWhile(x => x is not ".").Count() + data.AsEnumerable().Reverse().TakeWhile(x => x is ".").Count());
