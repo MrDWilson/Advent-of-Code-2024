@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using AdventOfCode.Models;
 using AdventOfCode.Services;
 using Microsoft.Extensions.Options;
@@ -9,24 +8,14 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
 {
     public int Day => 9;
 
-    private enum StorageType { Data, Empty };
     public async Task<long> Solve()
     {
         var lines = await loader.LoadGrid(Day, options.Value.SolutionType, options.Value.RunType);
         var items = lines.First();
 
-        var storageBytes = items.Index()
-            .Select(x => (Item: int.Parse(x.Item.ToString()), Type: x.Index % 2 is not 0 ? StorageType.Empty : StorageType.Data))
-            .Index()
-            .SelectMany(x => 
-            {
-                return Enumerable.Repeat(x.Item.Type switch
-                {
-                    StorageType.Empty => ".",
-                    StorageType.Data => (x.Index / 2).ToString(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(x.Item.Type))
-                }, x.Item.Item);
-            })
+        var storageBytes = items
+            .Select((ch, i) => new { Count = int.Parse(ch.ToString()), Symbol = i % 2 is 0 ? (i / 2).ToString() : "." })
+            .SelectMany(x => Enumerable.Repeat(x.Symbol, x.Count))
             .ToList();
 
         if (options.Value.SolutionType is SolutionType.First)
@@ -44,30 +33,13 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
             while (currentId >= 0)
             {
                 var byteCount = storageBytes.Count(x => x == currentId.ToString());
-
                 var currentIndex = storageBytes.IndexOf(currentId.ToString());
 
-                var spaceIndex = -1;
-                var groupIndex = 0;
-                foreach (var group in GroupAdjacent(storageBytes))
+                var spaceIndex = FindSpaceIndex(storageBytes, byteCount);
+                if (spaceIndex != -1 && spaceIndex < currentIndex)
                 {
-                    if (group.Key is "." && group.Value >= byteCount)
-                    {
-                        spaceIndex = groupIndex;
-                        break;
-                    }
-
-                    groupIndex += group.Value;
-                }
-
-                if (spaceIndex is not -1 && spaceIndex < currentIndex)
-                {
-                    var currentIndexes = Enumerable.Range(currentIndex, byteCount);
-                    var spaceIndexes = Enumerable.Range(spaceIndex, byteCount);
-                    foreach (var (ci, si) in currentIndexes.Zip(spaceIndexes))
-                    {
-                        (storageBytes[ci], storageBytes[si]) = (storageBytes[si], storageBytes[ci]);
-                    }
+                    foreach (var (src, dst) in Enumerable.Range(currentIndex, byteCount).Zip(Enumerable.Range(spaceIndex, byteCount)))
+                        (storageBytes[src], storageBytes[dst]) = (storageBytes[dst], storageBytes[src]);
                 }
 
                 currentId--;
@@ -75,6 +47,18 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
         }
 
         return storageBytes.Index().Select(x => x.Item is "." ? 0 : long.Parse(x.Item) * x.Index).Sum();
+    }
+
+    private static int FindSpaceIndex(List<string> storageBytes, int count)
+    {
+        var indexCounter = 0;
+        foreach (var g in GroupAdjacent(storageBytes))
+        {
+            if (g.Key is "." && g.Value >= count)
+                return indexCounter;
+            indexCounter += g.Value;
+        }
+        return -1;
     }
 
     private static IEnumerable<KeyValuePair<string, int>> GroupAdjacent(IEnumerable<string> sequence)

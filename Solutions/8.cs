@@ -14,7 +14,7 @@ public partial class Day8(IFileLoader loader, IOptions<SolutionOptions> options)
         var rows = await loader.LoadGrid(Day, options.Value.SolutionType, options.Value.RunType);
         var coords = rows
             .SelectMany((row, rowIndex) => row.Select((c, colIndex) => (c, rowIndex, colIndex)))
-            .Where(x => x.c != '.')
+            .Where(x => x.c is not '.')
             .GroupBy(x => x.c)
             .Where(g => g.Count() > 1)
             .ToDictionary(

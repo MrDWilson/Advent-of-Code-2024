@@ -37,7 +37,7 @@ public partial class Day4(IFileLoader loader, IOptions<SolutionOptions> options)
                 .Select(positions => (positions: positions.ToList(), word: ExtractWord(grid, positions)))
                 .Where(extractedWord => extractedWord.word == word)
                 .GroupBy(x => x.positions[1])
-                .Count(x => x.Count() == 2);
+                .Count(x => x.Count() is 2);
         }
 
         return totalMatches;

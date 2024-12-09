@@ -26,7 +26,7 @@ public partial class Day6(IFileLoader loader, IOptions<SolutionOptions> options)
                 foreach (var (colIndex, col) in row.Index())
                 {
                     var currentItem = rows[rowIndex][colIndex];
-                    if (currentItem != '#' && currentItem != '^')
+                    if (currentItem is not '#' && currentItem is not '^')
                     {
                         var copy = rows
                             .Select(row => row.ToList())

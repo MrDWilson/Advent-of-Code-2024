@@ -66,7 +66,7 @@ public partial class Day7(IFileLoader loader, IOptions<SolutionOptions> options)
 
     private static IEnumerable<IEnumerable<Operators>> GenerateOperators(Operators[] states, int length)
     {
-        if (length == 0)
+        if (length is 0)
         {
             yield return Enumerable.Empty<Operators>();
             yield break;
