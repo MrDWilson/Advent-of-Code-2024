@@ -10,7 +10,7 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
 
     public async Task<long> Solve()
     {
-        var lines = await loader.LoadGrid(Day, options.Value.SolutionType, options.Value.RunType);
+        var lines = await loader.LoadGrid<char>(Day, options.Value.SolutionType, options.Value.RunType);
         var items = lines.First();
 
         var storageBytes = items

@@ -11,7 +11,7 @@ public partial class Day4(IFileLoader loader, IOptions<SolutionOptions> options)
     public async Task<long> Solve()
     {
         
-        var grid = await loader.LoadGrid(Day, options.Value.SolutionType, options.Value.RunType);
+        var grid = await loader.LoadGrid<char>(Day, options.Value.SolutionType, options.Value.RunType);
 
         int rowCount = grid.Count;
         int colCount = grid[0].Count;

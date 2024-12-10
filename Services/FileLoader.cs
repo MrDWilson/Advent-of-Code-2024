@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using AdventOfCode.Models;
 
 namespace AdventOfCode.Services;
@@ -6,7 +7,7 @@ public interface IFileLoader
 {
     Task<string> LoadRaw(int day, SolutionType solutionType, RunType runType);
     Task<List<string>> LoadLines(int day, SolutionType solutionType, RunType runType);
-    Task<List<List<char>>> LoadGrid(int day, SolutionType solutionType, RunType runType);
+    Task<List<List<T>>> LoadGrid<T>(int day, SolutionType solutionType, RunType runType);
     Task<List<List<T>>> Load<T>(int day, SolutionType solutionType, RunType runType);
 }
 
@@ -31,10 +32,10 @@ public class FileLoader : IFileLoader
         return [.. raw.Split("\n", StringSplitOptions.RemoveEmptyEntries)];
     }
 
-    public async Task<List<List<char>>> LoadGrid(int day, SolutionType solutionType, RunType runType)
+    public async Task<List<List<T>>> LoadGrid<T>(int day, SolutionType solutionType, RunType runType)
     {
         var lines = await LoadLines(day, solutionType, runType);
-        return lines.Select(x => x.ToCharArray().ToList()).ToList();
+        return lines.Select(x => x.Select(y => y.ToString()).Where(y => !string.IsNullOrWhiteSpace(y)).Select(y => ChangeType<T>(y)).ToList()).ToList();
     }
 
     public async Task<List<List<T>>> Load<T>(int day, SolutionType solutionType, RunType runType)
