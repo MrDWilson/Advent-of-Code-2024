@@ -14,72 +14,76 @@ public partial class Day12(IFileLoader loader, IOptions<SolutionOptions> options
     {
         var grid = await loader.LoadTypedGrid<char>(Day, options.Value.SolutionType, options.Value.RunType);
         var plants = grid.GetUniqueItems();
-        var plantAreas = plants.Select(x => GetAreas(grid, x));
-        return plantAreas.SelectMany(x => x.Select(y => 
+        var plantAreas = plants.Select(x => (Plant: x, Area: GetAreas(grid, x)));
+        return plantAreas.SelectMany(x => x.Area.Select(y => 
         {
             var perimeter = grid.CalculateRegionPerimeter(y).Distinct();
             return y.Count() * (options.Value.SolutionType is SolutionType.First ? perimeter.Count() : CalculateSides(perimeter));
         })).Sum();
     }
 
+    private enum GroupType { X, Y }
     private static int CalculateSides(IEnumerable<Point> perimeter)
     {
-        double cx = perimeter.Average(p => p.X);
-        double cy = perimeter.Average(p => p.Y);
-        var orderedEdges = perimeter
-            .OrderBy(p => Math.Atan2(p.Y - cy, p.X - cx))
-            .ToList();
+        var ordered = perimeter.OrderBy(p => p.X).ThenBy(p => p.Y);
+        var xGroups = ordered.GroupBy(p => p.X);
+        var yGroups = ordered.GroupBy(p => p.Y);
 
-        int sides = 0;
-        var listLooped = orderedEdges.Skip(1).ToList();
-        listLooped.Add(orderedEdges.First());
+        HashSet<HashSet<Point>> allSides = [];
+        HandleSides(xGroups, GroupType.X);
+        HandleSides(yGroups, GroupType.Y);
 
-        Point? justTurned = null;
-        foreach (var (edgeOne, edgeTwo) in orderedEdges.Zip(listLooped))
+        foreach (var potentialSide in allSides.ToList())
         {
-            if (edgeOne.X != edgeTwo.X && edgeOne.Y != edgeTwo.Y)
+            if (potentialSide.Count > 1)
+                continue;
+
+            if (allSides.Any(x => x.Count > 1 && x.Contains(potentialSide.Single())))
+                allSides.Remove(potentialSide);
+        }
+
+        return allSides.Count;
+        
+        void HandleSides(IEnumerable<IGrouping<int, Point>> groups, GroupType type)
+        {
+            foreach(var group in groups)
             {
-                if (justTurned is not null && Math.Abs(justTurned.Value.X - edgeTwo.X) is 2 && Math.Abs(justTurned.Value.Y - edgeTwo.Y) is 2)
+                HashSet<Point> thisSide = [];
+                foreach(var (one, two) in group.Zip(group.Skip(1)))
                 {
-                    sides += 2;
+                    var diff = type is GroupType.X ? one.Y - two.Y : one.X - two.X;
+                    if (Math.Abs(diff) is 1)
+                    {
+                        var clashPoints = allSides.Where(x => x.Count is 1 && (x.Single() == one || x.Single() == two)).ToList();
+                        if (clashPoints.Count is 0)
+                        {
+                            foreach (var clash in clashPoints) allSides.Remove(clash);
+                        }
+
+                        thisSide.Add(one);
+                        thisSide.Add(two);
+                        continue;
+                    }
+                    else
+                    {
+                        if (thisSide.Count is not 0)
+                        {
+                            allSides.Add(thisSide);
+                            thisSide = [];
+                        }
+
+                        allSides.Add([one]);
+                        allSides.Add([two]);
+                    }
                 }
-                else sides++;
 
-                justTurned = edgeOne;
+                if (thisSide.Count is not 0)
+                {
+                    allSides.Add(thisSide);
+                }
             }
-            else justTurned = null;
         }
-
-        return sides;
     }
-
-    private static List<Point> GrahamScan(IEnumerable<Point> points)
-    {
-        var sorted = points.OrderBy(p => p.X).ThenBy(p => p.Y).ToList();
-        List<Point> hull = new List<Point>();
-
-        // Build lower hull
-        foreach (var p in sorted)
-        {
-            while (hull.Count >= 2 && Cross(hull[hull.Count - 2], hull[hull.Count - 1], p) <= 0)
-                hull.RemoveAt(hull.Count - 1);
-            hull.Add(p);
-        }
-
-        // Build upper hull
-        for (int i = sorted.Count - 2, l = hull.Count + 1; i >= 0; i--)
-        {
-            while (hull.Count >= l && Cross(hull[hull.Count - 2], hull[hull.Count - 1], sorted[i]) <= 0)
-                hull.RemoveAt(hull.Count - 1);
-            hull.Add(sorted[i]);
-        }
-
-        hull.RemoveAt(hull.Count - 1);
-        return hull;
-    }
-
-    private static double Cross(Point a, Point b, Point c) 
-        => (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
 
     private static List<IEnumerable<Point>> GetAreas(Grid<char> grid, char c)
     {
