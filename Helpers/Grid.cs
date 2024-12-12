@@ -21,6 +21,11 @@ public class Grid<T>(List<List<T>> _data) where T : struct
         }
     }
 
+    public IEnumerable<T> GetUniqueItems()
+    {
+        return _data.SelectMany(x => x).Distinct();
+    }
+
     public IEnumerable<Point> FindItems(T item)
     {
         return _data.Index()
