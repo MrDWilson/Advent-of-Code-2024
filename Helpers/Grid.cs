@@ -33,6 +33,69 @@ public class Grid<T>(List<List<T>> _data) where T : struct
             .Where(x => this[x] is T t && t.Equals(item));
     }
 
+    public IEnumerable<Point> FindConnectedRegion(Point start)
+    {
+        T targetValue = this[start] ?? throw new ArgumentOutOfRangeException(nameof(start));
+
+        List<Point> visited = [];
+
+        var directions = new Point[] 
+        {
+            new(-1, 0), // up
+            new(1, 0),  // down
+            new(0, -1), // left
+            new(0, 1)   // right
+        };
+
+        var queue = new Queue<Point>();
+        queue.Enqueue(start);
+        visited.Add(start);
+
+        while (queue.Count > 0)
+        {
+            var point = queue.Dequeue();
+            yield return point;
+
+            var neighbors = directions
+                .Select(d => new Point(point.X + d.X, point.Y + d.Y))
+                .Where(n => !OutOfBounds(n));
+
+            foreach (var neighbour in neighbors)
+            {
+                if (!visited.Contains(neighbour) && this[neighbour].Equals(targetValue))
+                {
+                    visited.Add(neighbour);
+                    queue.Enqueue(neighbour);
+                }
+            }
+        }
+    }
+
+    public IEnumerable<Point> CalculateRegionPerimeter(IEnumerable<Point> points)
+    {
+        var pointsSet = new HashSet<Point>(points);
+
+        var directions = new Point[] 
+        {
+            new(-1, 0), // up
+            new(1, 0),  // down
+            new(0, -1), // left
+            new(0, 1)   // right
+        };
+
+        foreach (var point in pointsSet)
+        {
+            foreach (var direction in directions)
+            {
+                var neighbour = new Point(point.X + direction.X, point.Y + direction.Y);
+                if (OutOfBounds(neighbour) || !pointsSet.Contains(neighbour))
+                {
+                    yield return neighbour;
+                }
+            }
+        }
+    }
+
     public IEnumerable<Point> GetSurroundingItems(Point point)
     {
         Point[] locations = 
