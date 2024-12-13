@@ -17,72 +17,60 @@ public partial class Day12(IFileLoader loader, IOptions<SolutionOptions> options
         var plantAreas = plants.Select(x => (Plant: x, Area: GetAreas(grid, x)));
         return plantAreas.SelectMany(x => x.Area.Select(y => 
         {
-            var perimeter = grid.CalculateRegionPerimeter(y).Distinct();
-            return y.Count() * (options.Value.SolutionType is SolutionType.First ? perimeter.Count() : CalculateSides(perimeter));
+            var perimeter = grid.CalculateRegionPerimeter(y);
+            return y.Count() * (options.Value.SolutionType is SolutionType.First ? perimeter.Count() : CountSides(y).Sum());
         })).Sum();
     }
 
-    private enum GroupType { X, Y }
-    private static int CalculateSides(IEnumerable<Point> perimeter)
+    private enum Direction { Up, Down, Left, Right }
+    private enum Axis { X, Y }
+    private static IEnumerable<int> CountSides(IEnumerable<Point> area)
     {
-        var ordered = perimeter.OrderBy(p => p.X).ThenBy(p => p.Y);
-        var xGroups = ordered.GroupBy(p => p.X);
-        var yGroups = ordered.GroupBy(p => p.Y);
-
-        HashSet<HashSet<Point>> allSides = [];
-        HandleSides(xGroups, GroupType.X);
-        HandleSides(yGroups, GroupType.Y);
-
-        foreach (var potentialSide in allSides.ToList())
-        {
-            if (potentialSide.Count > 1)
-                continue;
-
-            if (allSides.Any(x => x.Count > 1 && x.Contains(potentialSide.Single())))
-                allSides.Remove(potentialSide);
-        }
-
-        return allSides.Count;
-        
-        void HandleSides(IEnumerable<IGrouping<int, Point>> groups, GroupType type)
-        {
-            foreach(var group in groups)
+        yield return area.GroupBy(p => p.X).OrderBy(p => p.Key)
+            .Select(p => 
             {
-                HashSet<Point> thisSide = [];
-                foreach(var (one, two) in group.Zip(group.Skip(1)))
-                {
-                    var diff = type is GroupType.X ? one.Y - two.Y : one.X - two.X;
-                    if (Math.Abs(diff) is 1)
-                    {
-                        var clashPoints = allSides.Where(x => x.Count is 1 && (x.Single() == one || x.Single() == two)).ToList();
-                        if (clashPoints.Count is 0)
-                        {
-                            foreach (var clash in clashPoints) allSides.Remove(clash);
-                        }
+                var upSides = CountSidesDirectional(area, p, Direction.Up, Axis.X);
+                var downSides = CountSidesDirectional(area, p, Direction.Down, Axis.X);
+                return upSides + downSides;
+            }).Sum();
 
-                        thisSide.Add(one);
-                        thisSide.Add(two);
-                        continue;
-                    }
-                    else
-                    {
-                        if (thisSide.Count is not 0)
-                        {
-                            allSides.Add(thisSide);
-                            thisSide = [];
-                        }
+        yield return area.GroupBy(p => p.Y).OrderBy(p => p.Key)
+            .Select(p => 
+            {
+                var leftSides = CountSidesDirectional(area, p, Direction.Left, Axis.Y);
+                var rightSides = CountSidesDirectional(area, p, Direction.Right, Axis.Y);
+                return leftSides + rightSides;
+            }).Sum();
+    }
 
-                        allSides.Add([one]);
-                        allSides.Add([two]);
-                    }
-                }
+    private static int CountSidesDirectional(
+        IEnumerable<Point> area,
+        IGrouping<int, Point> group, 
+        Direction direction, 
+        Axis axis
+    )
+    {
+        var row = group.OrderBy(p => axis is Axis.X ? p.Y : p.X);
+        Point checkPoint = (axis, direction) switch
+        {
+            (Axis.X, Direction.Up) => new(-1, 0),
+            (Axis.X, Direction.Down) => new(1, 0),
+            (Axis.Y, Direction.Left) => new(0, -1),
+            (Axis.Y, Direction.Right) => new(0, 1),
+            _ => throw new ArgumentOutOfRangeException(nameof(direction))
+        };
 
-                if (thisSide.Count is not 0)
-                {
-                    allSides.Add(thisSide);
-                }
-            }
+        var exposedPoints = row.Where(p => !area.Contains(new Point(p.X + checkPoint.X, p.Y + checkPoint.Y)));
+        int sides = exposedPoints.Any() ? 1 : 0;
+        foreach (var (one, two) in exposedPoints.Zip(exposedPoints.Skip(1)))
+        {
+            var xDiff = Math.Abs(one.X - two.X);
+            var yDiff = Math.Abs(one.Y - two.Y);
+            if ((axis is Axis.X ? yDiff : xDiff) is 1) continue;
+            sides++;
         }
+        
+        return sides;
     }
 
     private static List<IEnumerable<Point>> GetAreas(Grid<char> grid, char c)
