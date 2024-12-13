@@ -1,5 +1,3 @@
-using System.Drawing;
-using AdventOfCode.Helpers;
 using AdventOfCode.Models;
 using AdventOfCode.Services;
 using Microsoft.Extensions.Options;
@@ -44,92 +42,35 @@ public partial class Day13(IFileLoader loader, IOptions<SolutionOptions> options
             clawMachines.Add(new ClawMachine(aButtonPoint, bButtonPoint, prizePoint));
         }
 
-        return clawMachines.Select(x => options.Value.SolutionType is SolutionType.First ? SolveMachine(x) : FindClosestCounts(x))
-            .Where(x => x is not null).Select(x => (x.Value.A * 3) +  (x.Value.B * 1)).Sum();
+        return clawMachines.Select(SolveEquation).Where(x => x is not 0).Sum();
     }
 
-    /// <summary>
-    /// Finds the closest counts of Button A and B presses to reach the target.
-    /// Minimizes the total number of presses (n + m) and favours Button A.
-    /// </summary>
-    public static (long A, long B)? FindClosestCounts(ClawMachine clawMachine)
+    private static long SolveEquation(ClawMachine clawMachine)
     {
-        // Calculate approximate m from the system
-        double mApprox = (94.0 * clawMachine.Prize.Y - 34.0 * clawMachine.Prize.X) / 5550.0;
+        // ax, ay = (x,y) of button one
+        // bx, by = (x,y) of button two
+        // ac, bc = count of pressed for buttons
+        // xx, xy = (x, y) of prize
+        // ax * ac + bx * bc = xx // Prize X equation
+        // ay * ac + by * bc = xy // Prize Y equation
 
-        // Round mApprox to the nearest integer
-        long m = (long)Math.Round(mApprox);
+        // Math time, start with Cramer's Rule
+        // xy * ax - xx * ay
+        var left = clawMachine.Prize.Y * clawMachine.ButtonA.X - clawMachine.Prize.X * clawMachine.ButtonA.Y;
+        // by * ax - bx * ay
+        var right = clawMachine.ButtonB.Y * clawMachine.ButtonA.X - clawMachine.ButtonB.X * clawMachine.ButtonA.Y;
+        var B = left / right;
 
-        // Iterate around m to find the best approximation
-        // Limit the search range to m +/- 1000 for practicality
-        long searchRange = 1000;
-        long bestN = 0, bestM = 0;
-        long smallestResidual = long.MaxValue;
+        // Now we have B, A becomes a bit easier
+        var A = (clawMachine.Prize.X - B * clawMachine.ButtonB.X) / clawMachine.ButtonA.X;
 
-        for (long delta = -searchRange; delta <= searchRange; delta++)
-        {
-            long currentM = m + delta;
-            if (currentM < 0)
-                continue;
+        // Does this equation actually work?
+        // Check our first button
+        if (clawMachine.ButtonA.X * A + clawMachine.ButtonB.X * B != clawMachine.Prize.X) return 0;
 
-            // Calculate n based on current m
-            long numeratorN = clawMachine.Prize.X - clawMachine.ButtonB.X * currentM;
-            if (numeratorN < 0)
-                continue;
-            if (numeratorN % clawMachine.ButtonA.X != 0)
-                continue;
-            long currentN = numeratorN / clawMachine.ButtonA.X;
+        // Check our second button
+        if (clawMachine.ButtonA.Y * A + clawMachine.ButtonB.Y * B != clawMachine.Prize.Y) return 0;
 
-            // Calculate achieved Y
-            long achievedY = currentN * clawMachine.ButtonA.Y + currentM * clawMachine.ButtonB.Y;
-
-            // Calculate residual for Y
-            long residualY = Math.Abs(clawMachine.Prize.Y - achievedY);
-
-            // Calculate residual for X
-            long achievedX = currentN * clawMachine.ButtonA.X + currentM * clawMachine.ButtonB.X;
-            long residualX = Math.Abs(clawMachine.Prize.X - achievedX);
-
-            // Total residual
-            long totalResidual = residualX + residualY;
-
-            // Check if this is the best so far
-            if (totalResidual < smallestResidual)
-            {
-                smallestResidual = totalResidual;
-                bestN = currentN;
-                bestM = currentM;
-            }
-
-            // Early exit if perfect match is found
-            if (totalResidual == 0)
-                break;
-        }
-
-        // Check if a valid approximation was found
-        if (smallestResidual < long.MaxValue)
-            return (bestN, bestM);
-
-        return null;
+        return A * 3 + B;
     }
-
-    private static (long A, long B)? SolveMachine(ClawMachine machine)
-    {
-        foreach (var aIndex in Enumerable.Range(1, 100))
-        {
-            foreach (var bIndex in Enumerable.Range(1, 100))
-            {
-                var aButton = new LongPoint(machine.ButtonA.X * aIndex, machine.ButtonA.Y * aIndex);
-                var bButton = new LongPoint(machine.ButtonB.X * bIndex, machine.ButtonB.Y * bIndex);
-                var total = new LongPoint(aButton.X + bButton.X, aButton.Y + bButton.Y);
-
-                if (total == machine.Prize)
-                {
-                    return (aIndex, bIndex);
-                }
-            }
-        }
-
-        return null;
-    } 
 }
