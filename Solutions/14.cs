@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Runtime.CompilerServices;
 using AdventOfCode.Helpers;
 using AdventOfCode.Models;
 using AdventOfCode.Services;
