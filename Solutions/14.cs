@@ -49,27 +49,28 @@ public partial class Day14(IFileLoader loader, IOptions<SolutionOptions> options
             while(true)
             {
                 robots = SimulateSecond(robots, bathroomSize).ToList();
-                if (AnyHighConnectedRegion(robots.Select(x => x.Position), bathroomSize)) return seconds;
+                if (AnyHighConnectedRegion(robots, bathroomSize)) 
+                {
+                    // Print our image
+                    Console.WriteLine(
+                        string.Join(
+                            Environment.NewLine, 
+                            MakeRobotGrid(robots, bathroomSize).Select(x => string.Join("", x))
+                        )
+                    );
+
+                    return seconds;
+                }
                 seconds++;
             }
         }
     }
 
-    private static bool AnyHighConnectedRegion(IEnumerable<LongPoint> positions, LongPoint bounds)
+    private static bool AnyHighConnectedRegion(IEnumerable<Robot> robots, LongPoint bounds)
     {
         // Brute force rather than having to reivew thousands of images
-        var rows = Enumerable.Repeat(0, (int)bounds.X + 1)
-            .Select(_ => Enumerable.Repeat(false, (int)bounds.Y + 1).ToList())
-            .ToList();
-
-        foreach (var position in positions)
-        {
-            rows[(int)position.X][(int)position.Y] = true;
-        }
-
-        Grid<bool> grid = new(rows);
-
-        foreach (var position in positions)
+        Grid<char> grid = new(MakeRobotGrid(robots, bounds));
+        foreach (var position in robots.Select(x => x.Position))
         {
             var connectedRegion = grid.FindConnectedRegion(new Point((int)position.X, (int)position.Y));
 
@@ -81,6 +82,20 @@ public partial class Day14(IFileLoader loader, IOptions<SolutionOptions> options
         }
 
         return false;
+    }
+
+    private static List<List<char>> MakeRobotGrid(IEnumerable<Robot> robots, LongPoint bounds)
+    {
+        var rows = Enumerable.Repeat(0, (int)bounds.X + 1)
+            .Select(_ => Enumerable.Repeat('.', (int)bounds.Y + 1).ToList())
+            .ToList();
+
+        foreach (var position in robots.Select(x => x.Position))
+        {
+            rows[(int)position.X][(int)position.Y] = '#';
+        }
+
+        return rows;
     }
 
     private static int GetCountInQuadrant(IEnumerable<Robot> robots, Range y, Range x)
