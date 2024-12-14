@@ -48,12 +48,8 @@ public partial class Day14(IFileLoader loader, IOptions<SolutionOptions> options
             int seconds = 1;
             while(true)
             {
-                Console.WriteLine($"Starting second: {seconds}");
-
                 robots = SimulateSecond(robots, bathroomSize).ToList();
-
                 if (AnyHighConnectedRegion(robots.Select(x => x.Position), bathroomSize)) return seconds;
-
                 seconds++;
             }
         }
@@ -61,36 +57,27 @@ public partial class Day14(IFileLoader loader, IOptions<SolutionOptions> options
 
     private static bool AnyHighConnectedRegion(IEnumerable<LongPoint> positions, LongPoint bounds)
     {
-        // This is for sure inefficient but I don't want to look at thousands of images
-        List<List<bool>> rows = [];
-        foreach (var xIndex in Enumerable.Range(0, (int)bounds.X + 1))
+        // Brute force rather than having to reivew thousands of images
+        var rows = Enumerable.Repeat(0, (int)bounds.X + 1)
+            .Select(_ => Enumerable.Repeat(false, (int)bounds.Y + 1).ToList())
+            .ToList();
+
+        foreach (var position in positions)
         {
-            List<bool> col = [];
-            foreach (var yIndex in Enumerable.Range(0, (int)bounds.Y + 1))
-            {
-                col.Add(positions.Any(p => p.X == xIndex && p.Y == yIndex));
-            }
-            rows.Add(col);
+            rows[(int)position.X][(int)position.Y] = true;
         }
 
         Grid<bool> grid = new(rows);
 
-        HashSet<Point> alreadyChecked = [];
         foreach (var position in positions)
         {
-            var point = new Point((int)position.X, (int)position.Y);
-
-            if (alreadyChecked.Contains(point)) continue;
-
-            var connectedRegion = grid.FindConnectedRegion(point);
+            var connectedRegion = grid.FindConnectedRegion(new Point((int)position.X, (int)position.Y));
 
             // If we've got more than 50 connected robots, assume this is a picture
             if (connectedRegion.Count() > 50)
             {
                 return true;
             }
-
-            foreach (var p in connectedRegion) alreadyChecked.Add(p);
         }
 
         return false;
