@@ -2,6 +2,8 @@ using System.Drawing;
 
 namespace AdventOfCode.Helpers;
 
+public enum Direction { Up, Down, Left, Right }
+
 public class Grid<T>(List<List<T>> _data) where T : struct
 {
     public T? this[Point point]
@@ -94,6 +96,25 @@ public class Grid<T>(List<List<T>> _data) where T : struct
                 }
             }
         }
+    }
+
+    public void SwapItems(Point point1, Point point2)
+    {
+        (_data[point1.X][point1.Y], _data[point2.X][point2.Y]) = (_data[point2.X][point2.Y], _data[point1.X][point1.Y]);
+    }
+
+    public (Point, T?) GetAdjacentItem(Point point, Direction direction)
+    {
+        Point location = direction switch
+        {
+            Direction.Up => new(point.X - 1, point.Y), 
+            Direction.Down => new(point.X + 1, point.Y), 
+            Direction.Left => new(point.X, point.Y - 1), 
+            Direction.Right => new(point.X, point.Y + 1),
+            _ => throw new ArgumentOutOfRangeException(nameof(direction))
+        };
+
+        return (location, this[location]);
     }
 
     public IEnumerable<Point> GetSurroundingItems(Point point)
