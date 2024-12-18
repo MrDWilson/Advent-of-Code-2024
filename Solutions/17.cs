@@ -10,10 +10,10 @@ public partial class Day17(IFileLoader loader, IOptions<SolutionOptions> options
 
     private class Program
     {
-        public int RegisterA;
-        public int RegisterB;
-        public int RegisterC;
-        public required List<int> Instructions;
+        public long RegisterA;
+        public long RegisterB;
+        public long RegisterC;
+        public required List<long> Instructions;
     }
 
     private Program program = null!;
@@ -28,31 +28,31 @@ public partial class Day17(IFileLoader loader, IOptions<SolutionOptions> options
         }
         else
         {
-            int newRegA = 0;
-            while (true)
-            {
-                newRegA++;
-                program.RegisterA = newRegA;
-                var broken = false;
-                var itemsMatched = 0;
-                foreach (var result in RunProgram().Index())
-                {
-                    if (program.Instructions[result.Index] != result.Item)
-                    {
-                        broken = true;
-                        break;
-                    }
-                    else itemsMatched++;
-                }
-
-                if (broken || itemsMatched != program.Instructions.Count) continue;
-
-                return newRegA.ToString();
-            }
+            return SolveA(0, 0).Min().ToString();
         } 
     }
 
-    private IEnumerable<int> RunProgram()
+    private List<long> SolveA(long current, int depth)
+    {
+        List<long> res = [];
+        if (depth > program.Instructions.Count) return res;
+        var tmp = current << 3;
+        foreach (var i in Enumerable.Range(0, 8))
+        {
+            program.RegisterA = tmp + i;
+            program.RegisterB = program.RegisterC = 0;
+            var tmpRes = RunProgram();
+            if (tmpRes.SequenceEqual(program.Instructions.TakeLast(depth + 1)))
+            {
+                if (depth + 1 == program.Instructions.Count) res.Add(tmp + i);
+                res.AddRange(SolveA(tmp + i, depth + 1));
+            }
+        }
+
+        return res;
+    } 
+
+    private IEnumerable<long> RunProgram()
     {
         int pointer = 0;
         while (pointer < program.Instructions.Count)
@@ -69,7 +69,7 @@ public partial class Day17(IFileLoader loader, IOptions<SolutionOptions> options
                     continue;
                 }
 
-                pointer = value;
+                pointer = (int)value;
                 continue;
             }
 
@@ -81,7 +81,7 @@ public partial class Day17(IFileLoader loader, IOptions<SolutionOptions> options
                 continue;
             }
 
-            Action<int> op = instruction switch
+            Action<long> op = instruction switch
             {
                 0 => Adv,
                 1 => Bxl,
@@ -97,50 +97,50 @@ public partial class Day17(IFileLoader loader, IOptions<SolutionOptions> options
         }
     }
 
-    private void Adv(int combo)
+    private void Adv(long combo)
     {
         var comboValue = GetComboValue(combo);
         var divResult = program.RegisterA / Math.Pow(2, comboValue);
-        program.RegisterA = (int)divResult;
+        program.RegisterA = (long)divResult;
     }
 
-    private void Bxl(int literal)
+    private void Bxl(long literal)
     {
         program.RegisterB ^= literal;
     }
 
-    private void Bst(int combo)
+    private void Bst(long combo)
     {
         var comboValue = GetComboValue(combo);
         program.RegisterB = comboValue % 8;
     }
 
-    private void Bxc(int _)
+    private void Bxc(long _)
     {
         program.RegisterB ^= program.RegisterC;
     }
 
-    private int Out(int combo)
+    private long Out(long combo)
     {
         var comboValue = GetComboValue(combo);
         return comboValue % 8;
     }
 
-    private void Bdv(int combo)
+    private void Bdv(long combo)
     {
         var comboValue = GetComboValue(combo);
         var divResult = program.RegisterA / Math.Pow(2, comboValue);
-        program.RegisterB = (int)divResult;
+        program.RegisterB = (long)divResult;
     }
 
-    private void Cdv(int combo)
+    private void Cdv(long combo)
     {
         var comboValue = GetComboValue(combo);
         var divResult = program.RegisterA / Math.Pow(2, comboValue);
-        program.RegisterC = (int)divResult;
+        program.RegisterC = (long)divResult;
     }
 
-    private int GetComboValue(int combo)
+    private long GetComboValue(long combo)
     {
         return combo switch
         {
@@ -157,10 +157,10 @@ public partial class Day17(IFileLoader loader, IOptions<SolutionOptions> options
 
     private static Program ParseInput(List<string> lines)
     {
-        int registerA = 0, registerB = 0, registerC = 0;
-        List<int> instructions = [];
+        long registerA = 0, registerB = 0, registerC = 0;
+        List<long> instructions = [];
 
-        static int ParseLine(string x) => int.Parse(x.Split(":")[1].Trim()); 
+        static long ParseLine(string x) => long.Parse(x.Split(":")[1].Trim()); 
         foreach (var line in lines)
         {
             if (line.StartsWith("Register A"))
@@ -177,7 +177,7 @@ public partial class Day17(IFileLoader loader, IOptions<SolutionOptions> options
             }
             else if (line.StartsWith("Program"))
             {
-                instructions = line.Split(":")[1].Split(",").Select(x => int.Parse(x.Trim())).ToList();
+                instructions = line.Split(":")[1].Split(",").Select(x => long.Parse(x.Trim())).ToList();
             }
         }
 
