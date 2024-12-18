@@ -12,14 +12,20 @@ public partial class Day15(IFileLoader loader, IOptions<SolutionOptions> options
     
     private readonly char[] Directions = ['<', '^', '>', 'v'];
 
-    private enum CellType { Wall, Box, Empty, Robot }
+    private enum CellType { Wall, Box, BoxLeft, BoxRight, Empty, Robot }
     public async Task<long> Solve()
     {
         var lines = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
         var gridLines = lines.TakeWhile(x => !x.Any(x => Directions.Contains(x)));
         var instructionLine = string.Join("", lines.Except(gridLines).Select(x => x.Trim()));
 
-        var grid = new Grid<CellType>(gridLines.Select(line => line.Select(GetCellType).ToList()).ToList());
+        var gridLists = gridLines.Select(line => line.Select(GetCellType).ToList()).ToList();
+        if (options.Value.SolutionType is SolutionType.Second)
+        {
+            gridLists = DoubleGrid(gridLists);
+        }
+
+        var grid = new Grid<CellType>(gridLists);
         var instructions = instructionLine.Select(GetInstruction);
 
         foreach (var instruction in instructions)
@@ -27,7 +33,35 @@ public partial class Day15(IFileLoader loader, IOptions<SolutionOptions> options
             Move(grid, instruction);
         }
 
-        return grid.FindItems(CellType.Box).Select(GetGPSValue).Sum();
+        return options.Value.SolutionType is SolutionType.First
+            ? grid.FindItems(CellType.Box).Select(GetGPSValue).Sum()
+            : grid.FindItems(CellType.BoxLeft).Select(GetGPSValue).Sum();
+    }
+
+    private static List<List<CellType>> DoubleGrid(List<List<CellType>> grid)
+    {
+        List<List<CellType>> newGrid = [];
+        foreach (var row in grid)
+        {
+            List<CellType> newRow = [];
+            foreach (var col in row)
+            {
+                List<CellType> newItems = col switch
+                {
+                    CellType.Wall => [CellType.Wall, CellType.Wall],
+                    CellType.Box => [CellType.BoxLeft, CellType.BoxRight],
+                    CellType.Empty => [CellType.Empty, CellType.Empty],
+                    CellType.Robot => [CellType.Robot, CellType.Empty],
+                    _ => throw new ArgumentOutOfRangeException(nameof(grid))
+                };
+
+                newRow.AddRange(newItems);
+            }
+
+            newGrid.Add(newRow);
+        }
+
+        return newGrid;
     }
 
     private static long GetGPSValue(Point point)
@@ -48,7 +82,9 @@ public partial class Day15(IFileLoader loader, IOptions<SolutionOptions> options
         {
             grid.SwapItems(currentPosition, nextLocation);
         }
-        else if (nextItem is CellType.Box)
+        else if (nextItem is CellType.Box || 
+            ((nextItem is CellType.BoxLeft || nextItem is CellType.BoxRight) &&
+            (direction is Direction.Left || direction is Direction.Right)))
         {
             Stack<(Point one, Point two)> items = [];
             items.Push((currentPosition, nextLocation));
@@ -66,11 +102,51 @@ public partial class Day15(IFileLoader loader, IOptions<SolutionOptions> options
                     items.Push((locationStore, nextLocation));
                     break;
                 }
-                else if (nextItem is CellType.Box)
+                else if (nextItem is CellType.Box || nextItem is CellType.BoxLeft || nextItem is CellType.BoxRight)
                 {
                     items.Push((locationStore, nextLocation));
                     locationStore = nextLocation;
                 }
+            }
+
+            while (items.TryPop(out var points))
+            {
+                grid.SwapItems(points.one, points.two);
+            }
+        }
+        else if (nextItem is CellType.BoxLeft || nextItem is CellType.BoxRight)
+        {
+            var (otherSideBox, _) = grid.GetAdjacentItem(nextLocation, nextItem is CellType.BoxLeft ? Direction.Right : Direction.Left);
+            
+            Stack<(Point one, Point two)> items = [];
+            items.Push((currentPosition, nextLocation));
+
+            List<Point> boxes = [nextLocation, otherSideBox];
+            List<Point> newBoxes = [];
+            while (boxes.Count is not 0)
+            {
+                foreach (var box in boxes)
+                {
+                    (nextLocation, nextItem) = grid.GetAdjacentItem(box, direction);
+                    if (nextItem is CellType.Wall)
+                    {
+                        return;
+                    }
+                    else if (nextItem is CellType.Empty)
+                    {
+                        items.Push((box, nextLocation));
+                        continue;
+                    }
+                    else if (nextItem is CellType.BoxLeft || nextItem is CellType.BoxRight)
+                    {
+                        (otherSideBox, _) = grid.GetAdjacentItem(nextLocation, nextItem is CellType.BoxLeft ? Direction.Right : Direction.Left);
+                        items.Push((box, nextLocation));
+                        newBoxes.AddRange([nextLocation, otherSideBox]);
+                    }
+                }
+
+                boxes = newBoxes.Distinct().ToList();
+                newBoxes = [];
             }
 
             while (items.TryPop(out var points))
