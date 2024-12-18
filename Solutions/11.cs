@@ -10,11 +10,11 @@ public partial class Day11(IFileLoader loader, IOptions<SolutionOptions> options
     public int Day => 11;
 
     private readonly Dictionary<(long, int), IEnumerable<long>> Cache = [];
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var data = await loader.Load<long>(Day, options.Value.SolutionType, options.Value.RunType);
         IEnumerable<long> stones = data.First();
-        return ProcessBlinks(stones, [ZeroRule, DigitRule, WildcardRule], options.Value.SolutionType is SolutionType.First ? 25 : 75).Sum();
+        return ProcessBlinks(stones, [ZeroRule, DigitRule, WildcardRule], options.Value.SolutionType is SolutionType.First ? 25 : 75).Sum().ToString();
     }
 
     private IEnumerable<long> ProcessBlinks(IEnumerable<long> stones, List<Func<long, IEnumerable<long>>> rules, int blinkCount)

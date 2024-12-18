@@ -8,7 +8,7 @@ public partial class Day4(IFileLoader loader, IOptions<SolutionOptions> options)
 {
     public int Day => 4;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         
         var grid = await loader.LoadGrid<char>(Day, options.Value.SolutionType, options.Value.RunType);
@@ -40,7 +40,7 @@ public partial class Day4(IFileLoader loader, IOptions<SolutionOptions> options)
                 .Count(x => x.Count() is 2);
         }
 
-        return totalMatches;
+        return totalMatches.ToString();
     }
 
     private enum Direction { Vertical, Horizontal, Diagonal }

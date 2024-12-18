@@ -8,7 +8,7 @@ public partial class Day7(IFileLoader loader, IOptions<SolutionOptions> options)
 {
     public int Day => 7;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var lines = await loader.Load<string>(Day, options.Value.SolutionType, options.Value.RunType);
         var items = lines.ToDictionary(x => long.Parse(x.First().TrimEnd(':')), x => x.Skip(1).Select(y => long.Parse(y)));
@@ -18,7 +18,7 @@ public partial class Day7(IFileLoader loader, IOptions<SolutionOptions> options)
             SolutionType.First => ProcessItems(items, [Operators.Add, Operators.Multiply]),
             SolutionType.Second => ProcessItems(items, [Operators.Add, Operators.Multiply, Operators.Combine]),
             _ => throw new ArgumentOutOfRangeException(nameof(options.Value.SolutionType))
-        }).Sum();
+        }).Sum().ToString();
     }
 
     private static IEnumerable<long> ProcessItems(Dictionary<long, IEnumerable<long>> items, Operators[] operators)

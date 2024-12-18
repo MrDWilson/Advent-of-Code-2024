@@ -9,7 +9,7 @@ public partial class Day8(IFileLoader loader, IOptions<SolutionOptions> options)
 {
     public int Day => 8;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var rows = await loader.LoadGrid<char>(Day, options.Value.SolutionType, options.Value.RunType);
         var coords = rows
@@ -58,7 +58,7 @@ public partial class Day8(IFileLoader loader, IOptions<SolutionOptions> options)
             }
         }
 
-        return allAntinodes.Count;
+        return allAntinodes.Count.ToString();
     }
 
     private static (Point one, Point two) GetAntinodeDistances(Point one, Point two)

@@ -15,7 +15,7 @@ public partial class Day16(IFileLoader loader, IOptions<SolutionOptions> options
 
     private Grid<CellType> Grid = null!;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var lines = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
         var gridLines = lines.Select(x => x.Select(GetCell).ToList()).ToList();
@@ -116,7 +116,9 @@ public partial class Day16(IFileLoader loader, IOptions<SolutionOptions> options
             BacktrackRoute((endState.Location, endState.Direction), parents, route, allRoutes);
         }
 
-        return options.Value.SolutionType is SolutionType.First ? bestCost.Value : allRoutes.SelectMany(x => x.Select(y => y.Item1)).Distinct().Count();
+        return options.Value.SolutionType is SolutionType.First 
+            ? bestCost.Value.ToString() 
+            : allRoutes.SelectMany(x => x.Select(y => y.Item1)).Distinct().Count().ToString();
     }
 
     private static void TryEnqueueState(

@@ -8,7 +8,7 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
 {
     public int Day => 9;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var lines = await loader.LoadGrid<char>(Day, options.Value.SolutionType, options.Value.RunType);
         var items = lines.First();
@@ -46,7 +46,7 @@ public partial class Day9(IFileLoader loader, IOptions<SolutionOptions> options)
             }
         }
 
-        return storageBytes.Index().Select(x => x.Item is "." ? 0 : long.Parse(x.Item) * x.Index).Sum();
+        return storageBytes.Index().Select(x => x.Item is "." ? 0 : long.Parse(x.Item) * x.Index).Sum().ToString();
     }
 
     private static int FindSpaceIndex(List<string> storageBytes, int count)

@@ -8,7 +8,7 @@ public partial class Day5(IFileLoader loader, IOptions<SolutionOptions> options)
 {
     public int Day => 5;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var lines = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
 
@@ -51,7 +51,7 @@ public partial class Day5(IFileLoader loader, IOptions<SolutionOptions> options)
             }).ToList();
         }
 
-        return items.Sum(page => page[page.Count / 2]);
+        return items.Sum(page => page[page.Count / 2]).ToString();
     }
 
     private static bool IsPageOrdered(List<int> instruction, Dictionary<int, List<int>> rules)

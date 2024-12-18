@@ -10,7 +10,7 @@ public partial class Day12(IFileLoader loader, IOptions<SolutionOptions> options
 {
     public int Day => 12;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var grid = await loader.LoadTypedGrid<char>(Day, options.Value.SolutionType, options.Value.RunType);
         var plants = grid.GetUniqueItems();
@@ -19,7 +19,7 @@ public partial class Day12(IFileLoader loader, IOptions<SolutionOptions> options
         {
             var perimeter = grid.CalculateRegionPerimeter(y);
             return y.Count() * (options.Value.SolutionType is SolutionType.First ? perimeter.Count() : CountSides(y).Sum());
-        })).Sum();
+        })).Sum().ToString();
     }
 
     private enum Direction { Up, Down, Left, Right }

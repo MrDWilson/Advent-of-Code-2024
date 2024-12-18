@@ -10,7 +10,7 @@ public partial class Day13(IFileLoader loader, IOptions<SolutionOptions> options
 
     public record LongPoint(long X, long Y);
     public record ClawMachine(LongPoint ButtonA, LongPoint ButtonB, LongPoint Prize);
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var input = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
         var blocks = input.Where(x => x.Trim() is { Length: > 0 }).Chunk(3);
@@ -42,7 +42,7 @@ public partial class Day13(IFileLoader loader, IOptions<SolutionOptions> options
             clawMachines.Add(new ClawMachine(aButtonPoint, bButtonPoint, prizePoint));
         }
 
-        return clawMachines.Select(SolveEquation).Where(x => x is not 0).Sum();
+        return clawMachines.Select(SolveEquation).Where(x => x is not 0).Sum().ToString();
     }
 
     private static long SolveEquation(ClawMachine clawMachine)

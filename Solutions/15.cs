@@ -13,7 +13,7 @@ public partial class Day15(IFileLoader loader, IOptions<SolutionOptions> options
     private readonly char[] Directions = ['<', '^', '>', 'v'];
 
     private enum CellType { Wall, Box, BoxLeft, BoxRight, Empty, Robot }
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var lines = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
         var gridLines = lines.TakeWhile(x => !x.Any(x => Directions.Contains(x)));
@@ -34,8 +34,8 @@ public partial class Day15(IFileLoader loader, IOptions<SolutionOptions> options
         }
 
         return options.Value.SolutionType is SolutionType.First
-            ? grid.FindItems(CellType.Box).Select(GetGPSValue).Sum()
-            : grid.FindItems(CellType.BoxLeft).Select(GetGPSValue).Sum();
+            ? grid.FindItems(CellType.Box).Select(GetGPSValue).Sum().ToString()
+            : grid.FindItems(CellType.BoxLeft).Select(GetGPSValue).Sum().ToString();
     }
 
     private static List<List<CellType>> DoubleGrid(List<List<CellType>> grid)

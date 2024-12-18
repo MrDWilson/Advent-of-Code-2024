@@ -12,7 +12,7 @@ public partial class Day14(IFileLoader loader, IOptions<SolutionOptions> options
 
     public record LongPoint(long Y, long X);
     public record Robot(LongPoint Position, LongPoint Velocity);
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         static LongPoint ParsePoint(string s)
         {
@@ -41,7 +41,7 @@ public partial class Day14(IFileLoader loader, IOptions<SolutionOptions> options
 
             var quadTypes = Enum.GetValues<Quadrant>();
             var quads = quadTypes.Select(x => GetQuadrant(bathroomSize, x));
-            return quads.Select(x => GetCountInQuadrant(robots, x.Y, x.X)).Aggregate((x, y) => x * y);
+            return quads.Select(x => GetCountInQuadrant(robots, x.Y, x.X)).Aggregate((x, y) => x * y).ToString();
         }
         else
         {
@@ -59,7 +59,7 @@ public partial class Day14(IFileLoader loader, IOptions<SolutionOptions> options
                         )
                     );
 
-                    return seconds;
+                    return seconds.ToString();
                 }
                 seconds++;
             }

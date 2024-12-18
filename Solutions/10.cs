@@ -10,11 +10,11 @@ public partial class Day10(IFileLoader loader, IOptions<SolutionOptions> options
 {
     public int Day => 10;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var grid = await loader.LoadTypedGrid<int>(Day, options.Value.SolutionType, options.Value.RunType);
         var trailheads = grid.FindItems(0);
-        return trailheads.Select(x => FollowTrailhead(grid, x)).Sum();
+        return trailheads.Select(x => FollowTrailhead(grid, x)).Sum().ToString();
     }
 
     private long FollowTrailhead(Grid<int> grid, Point point)

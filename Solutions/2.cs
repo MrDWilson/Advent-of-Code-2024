@@ -8,7 +8,7 @@ public class Day2(IFileLoader loader, IOptions<SolutionOptions> options) : ISolu
 {
     public int Day => 2;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var reports = await loader.Load<int>(Day, options.Value.SolutionType, options.Value.RunType);
         var safeCount = reports.Count(x => options.Value.SolutionType switch 
@@ -18,7 +18,7 @@ public class Day2(IFileLoader loader, IOptions<SolutionOptions> options) : ISolu
             _ => throw new ArgumentOutOfRangeException(nameof(options.Value.SolutionType))
         });
 
-        return safeCount;
+        return safeCount.ToString();
     }
 
     private static bool IsStrictlyMonotonic(IEnumerable<int> numbers)

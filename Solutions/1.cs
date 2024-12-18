@@ -8,7 +8,7 @@ public class Day1(IFileLoader loader, IOptions<SolutionOptions> options) : ISolu
 {
     public int Day => 1;
 
-    public async Task<long> Solve()
+    public async Task<string> Solve()
     {
         var lines = await loader.Load<int>(Day, options.Value.SolutionType, options.Value.RunType);
         var listOne = lines.Select(parts => parts.First()).ToList();
@@ -20,6 +20,6 @@ public class Day1(IFileLoader loader, IOptions<SolutionOptions> options) : ISolu
             _ => throw new ArgumentOutOfRangeException(nameof(options.Value.SolutionType))
         };
 
-        return result;
+        return result.ToString();
     }
 }
