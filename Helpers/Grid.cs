@@ -23,6 +23,11 @@ public class Grid<T>(List<List<T>> _data) where T : struct
         }
     }
 
+    public Grid<T> Copy()
+    {
+        return new(_data.Select(x => x.ToList()).ToList());
+    }
+
     public IEnumerable<T> GetUniqueItems()
     {
         return _data.SelectMany(x => x).Distinct();
