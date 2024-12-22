@@ -135,7 +135,7 @@ public class Grid<T>(List<List<T>> _data) where T : struct
         return locations.Where(x => !OutOfBounds(x));
     }
 
-    private bool OutOfBounds(Point coords)
+    public bool OutOfBounds(Point coords)
         => coords.X < 0 || coords.Y < 0 || coords.X >= _data.Count || coords.Y >= _data.First().Count;
 
     public string[] ToString(Func<T, string> func)
