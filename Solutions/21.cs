@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Drawing;
 using AdventOfCode.Helpers;
 using AdventOfCode.Models;
@@ -16,8 +17,7 @@ public partial class Day21(IFileLoader loader, IOptions<SolutionOptions> options
         var lines = await loader.LoadLines(Day, options.Value.SolutionType, options.Value.RunType);
         var codes = lines.Select(x => x.ToCharArray()).ToList();
 
-        List<List<char>> keypadLines =
-        [
+        List<List<char>> keypadLines = [
             ['7', '8', '9'],
             ['4', '5', '6'],
             ['1', '2', '3'],
@@ -25,168 +25,225 @@ public partial class Day21(IFileLoader loader, IOptions<SolutionOptions> options
         ];
         var keypad = new Grid<char>(keypadLines);
 
-        List<List<char>> arrowLines =
-        [
+        List<List<char>> arrowLines = [
             [' ', '^', 'A'],
             ['<', 'v', '>']
         ];
         var arrows = new Grid<char>(arrowLines);
-        var arrowStartingPoint = arrows.FindItems('A').Single();
 
         var keypadRobot = keypad.FindItems('A').Single();
-        var arrowRobot1 = arrowStartingPoint;
-        var arrowRobot2 = arrowStartingPoint;
+        var arrowStart  = arrows.FindItems('A').Single();
 
+        int depth = options.Value.SolutionType is SolutionType.First ? 2 : 25;
         long total = 0;
         foreach (var code in codes)
         {
-            List<Actions> humanSteps = [];
-            foreach (var c in code)
+            long bestCostForThisCode = long.MaxValue;
+            var digit = int.Parse(new string(code.Where(char.IsDigit).ToArray()));
+
+            var allKeypadSequences = GetAllKeypadSequences(keypad, keypadRobot, code);
+            foreach (var keyPadPath in allKeypadSequences)
             {
-                List<Actions> directionOne = [], directionTwo = [];
-                Point keypadRobotCache = keypadRobot, arrowRobot1Cache = arrowRobot1, arrowRobot2Cache = arrowRobot2;
-                foreach (var direction in new bool[] { true, false })
+                long cost = CountPushes(keyPadPath, depth, arrows);
+                if (cost < bestCostForThisCode)
                 {
-                    if (!direction)
-                    {
-                        keypadRobot = keypadRobotCache;
-                        arrowRobot1 = arrowRobot1Cache;
-                        arrowRobot2 = arrowRobot2Cache;
-                    }
-
-                    (var steps, keypadRobot) = CalculateSteps(keypad, c, keypadRobot, direction);
-
-                    steps = steps.SelectMany(x => 
-                    {
-                        (var result, arrowRobot1) = CalculateSteps(arrows, ActionToChar(x), arrowRobot1, direction);
-                        return result;
-                    }).ToList();
-                    
-                    steps = steps.SelectMany(x => 
-                    {
-                        (var result, arrowRobot2) = CalculateSteps(arrows, ActionToChar(x), arrowRobot2, direction);
-                        return result;
-                    }).ToList();
-
-                    if (direction)
-                        directionOne.AddRange(steps);
-                    else
-                        directionTwo.AddRange(steps);
-                }
-
-                if (directionOne.Count > directionTwo.Count)
-                    humanSteps.AddRange(directionTwo);
-                else if (directionOne.Count < directionTwo.Count)
-                    humanSteps.AddRange(directionOne);
-                else
-                {
-                    var directionOneDistance = directionOne.GroupWhile((a, b) => a == b).Where(x => x.Count() > 1).Count();
-                    var directionTwoDistance = directionTwo.GroupWhile((a, b) => a == b).Where(x => x.Count() > 1).Count();
-
-                    humanSteps.AddRange(directionOneDistance > directionTwoDistance ? directionOne : directionTwo);
+                    bestCostForThisCode = cost;
                 }
             }
-            
-            Console.WriteLine(string.Join("", humanSteps.Select(ActionToChar)));
-            Console.WriteLine(humanSteps.Count);
-            var digit = int.Parse(new string(code.Where(x => x is >= '0' and <= '9').ToArray()));
-            total += digit * humanSteps.Count;
+
+            total += bestCostForThisCode * digit;
         }
 
         return total.ToString();
     }
 
-    private static readonly Dictionary<(char, Point), List<Actions>> Memo = [];
-    private static (List<Actions>, Point) CalculateSteps(Grid<char> grid, char c, Point startPoint, bool yFirst)
+    private static List<List<Actions>> GetAllKeypadSequences(Grid<char> keypad, Point start, char[] code)
     {
-        var destination = grid.FindItems(c).Single();
-        var arrowPad = !grid.FindItems('0').Any();
-        if (arrowPad)
+        return RecurseAllKeypadPaths(keypad, start, code, 0);
+    }
+
+    private static List<List<Actions>> RecurseAllKeypadPaths(Grid<char> keypad, Point currentPos, char[] code, int index)
+    {
+        if (index == code.Length)
         {
-            if (Memo.TryGetValue((c, startPoint), out var result)) return (result, destination);
+            return [[]];
         }
 
-        var xSteps = destination.X - startPoint.X;
-        var ySteps = destination.Y - startPoint.Y;
-        var xDirection = xSteps > 0 ? Direction.Down : Direction.Up;
-        var yDirection = ySteps > 0 ? Direction.Right : Direction.Left;
+        var nextChar = code[index];
+        var allPaths = BfsAllShortestPaths(keypad, currentPos, nextChar);
 
-        var steps = GetSteps();
-
-        if (arrowPad && (!Memo.ContainsKey((c, startPoint)) || (Memo[(c, startPoint)].Count > steps.Count)))
+        if (allPaths.Count is 0)
         {
-            Memo[(c, startPoint)] = steps;
+            return [];
         }
 
-        return (steps, destination);
-
-        List<Actions> GetSteps()
+        var result = new List<List<Actions>>();
+        foreach (var path in allPaths)
         {
-            var xStepCount = Math.Abs(xSteps);
-            var yStepCount = Math.Abs(ySteps);
-            var currentPoint = startPoint;
-            var steps = new List<Actions>();
-            while (xStepCount + yStepCount > 0)
+            var endPos = ComputeEndPoint(currentPos, path);
+            var tails = RecurseAllKeypadPaths(keypad, endPos, code, index + 1);
+            foreach (var t in tails)
             {
-                bool DoY()
+                var combined = new List<Actions>(path);
+                combined.AddRange(t);
+                result.Add(combined);
+            }
+        }
+
+        return result;
+    }
+
+    private static Point ComputeEndPoint(Point start, List<Actions> path)
+    {
+        var end = start;
+        foreach (var i in Enumerable.Range(0, path.Count))
+        {
+            if (path[i] is Actions.Press) break;
+            var (dx, dy) = Directions[path[i]];
+            end = new Point(end.X + dx, end.Y + dy);
+        }
+        return end;
+    }
+
+    private static readonly Dictionary<(ImmutableArray<Actions> keyPadPath, int depth), long> PushesMemo = [];
+    private static long CountPushes(List<Actions> keyPadPath, int depth, Grid<char> arrowPad)
+    {
+        var cacheKey = (keyPadPath.ToImmutableArray(), depth);
+        if (PushesMemo.TryGetValue(cacheKey, out var memo)) return memo;
+
+        if (depth is 0)
+        {
+            return PushesMemo[cacheKey] = keyPadPath.Count;
+        }
+
+        var position = arrowPad.FindItems('A').Single();
+        long total = 0;
+        foreach (var action in keyPadPath)
+        {
+            char arrowSymbol = ActionToChar(action);
+            var roads = BfsAllShortestPaths(arrowPad, position, arrowSymbol);
+            if (roads.Count is 0)
+            {
+                return PushesMemo[cacheKey] = long.MaxValue;
+            }
+
+            long minCost = long.MaxValue;
+            foreach (var road in roads)
+            {
+                long costOfThisRoad = CountPushesRoad(road, depth - 1, arrowPad);
+                if (costOfThisRoad < minCost) 
+                    minCost = costOfThisRoad;
+            }
+
+            total += minCost;
+
+            position = arrowPad.FindItems(arrowSymbol).First();
+        }
+
+        return PushesMemo[cacheKey] = total;
+    }
+
+    private static readonly Dictionary<(ImmutableArray<Actions> arrowPath, int depth), long> RoadMemo = [];
+    private static long CountPushesRoad(List<Actions> arrowPath, int depth, Grid<char> arrowPad)
+    {
+        var cacheKey = (arrowPath.ToImmutableArray(), depth);
+        if (RoadMemo.TryGetValue(cacheKey, out var memoValue))
+        {
+            return memoValue;
+        }
+
+        if (depth is 0)
+        {
+            return RoadMemo[cacheKey] = arrowPath.Count;
+        }
+
+        var position = arrowPad.FindItems('A').Single();
+        long sum = 0;
+        foreach (var action in arrowPath)
+        {
+            char c = ActionToChar(action);
+            var roads = BfsAllShortestPaths(arrowPad, position, c);
+            if (roads.Count is 0)
+            {
+                return RoadMemo[cacheKey] = long.MaxValue;
+            }
+
+            long min = long.MaxValue;
+            foreach (var r in roads)
+            {
+                long cost = CountPushesRoad(r, depth - 1, arrowPad);
+                if (cost < min) min = cost;
+            }
+
+            sum += min;
+            position = arrowPad.FindItems(c).First();
+        }
+
+        return RoadMemo[cacheKey] = sum;
+    }
+
+    private static readonly Dictionary<Actions, (int dx, int dy)> Directions = new()
+    {
+        [Actions.Up]    = (-1, 0),
+        [Actions.Down]  = ( 1, 0),
+        [Actions.Left]  = ( 0,-1),
+        [Actions.Right] = ( 0, 1),
+    };
+    private static List<List<Actions>> BfsAllShortestPaths(
+        Grid<char> grid,
+        Point start,
+        char goal
+    )
+    {
+        if (grid[start] == goal)
+        {
+            return [[Actions.Press]];
+        }
+
+        var queue = new Queue<(Point Current, List<Actions> Path)>();
+        queue.Enqueue((start, new List<Actions>()));
+
+        int bestDistance = int.MaxValue;
+        var shortestPaths = new List<List<Actions>>();
+        var distMap = new Dictionary<Point, int> { [start] = 0 };
+        while (queue.Count > 0)
+        {
+            var (current, pathSoFar) = queue.Dequeue();
+            int currentDistance = pathSoFar.Count;
+
+            if (currentDistance > bestDistance) 
+                continue;
+
+            foreach (var (action, (dx, dy)) in Directions)
+            {
+                var nextPoint = new Point(current.X + dx, current.Y + dy);
+                if (grid.OutOfBounds(nextPoint) || grid[nextPoint] is ' ') 
+                    continue;
+
+                var nextPath = new List<Actions>(pathSoFar) { action };
+                if (!distMap.TryGetValue(nextPoint, out var oldDist) || oldDist >= nextPath.Count)
                 {
-                    if (yStepCount > 0)
+                    distMap[nextPoint] = nextPath.Count;
+                    
+                    if (grid[nextPoint] == goal)
                     {
-                        Point nextPoint;
-                        if (yDirection is Direction.Right)
-                            nextPoint = new(currentPoint.X, currentPoint.Y + 1);
-                        else
-                            nextPoint = new(currentPoint.X, currentPoint.Y - 1);
-
-                        if (grid[nextPoint] is not ' ')
+                        nextPath.Add(Actions.Press);
+                        if (nextPath.Count < bestDistance)
                         {
-                            currentPoint = nextPoint;
-                            steps.Add(yDirection == Direction.Right ? Actions.Right : Actions.Left);
-                            yStepCount--;
-                            return true;
+                            bestDistance = nextPath.Count;
+                            shortestPaths.Clear();
                         }
+                        shortestPaths.Add(nextPath);
                     }
-
-                    return false;
-                }
-
-                bool DoX()
-                {
-                    if (xStepCount > 0)
+                    else
                     {
-                        Point nextPoint;
-                        if (xDirection is Direction.Down)
-                            nextPoint = new(currentPoint.X + 1, currentPoint.Y);
-                        else
-                            nextPoint = new(currentPoint.X - 1, currentPoint.Y);
-
-                        if (grid[nextPoint] is not ' ')
-                        {
-                            currentPoint = nextPoint;
-                            steps.Add(xDirection == Direction.Down ? Actions.Down : Actions.Up);
-                            xStepCount--;
-                            return true;
-                        }
+                        queue.Enqueue((nextPoint, nextPath));
                     }
-
-                    return false;
-                }
-
-                if (yFirst)
-                {
-                    if (!DoY())
-                        DoX();
-                }
-                else
-                {
-                    if (!DoX())
-                        DoY();
                 }
             }
-            steps.Add(Actions.Press);
-
-            return steps;
         }
+
+        return shortestPaths;
     }
 
     private static char ActionToChar(Actions a) => a switch
