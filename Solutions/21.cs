@@ -7,6 +7,24 @@ using Microsoft.Extensions.Options;
 
 namespace AdventOfCode.Solutions;
 
+class ImmutableArrayComparer<T> : IEqualityComparer<(ImmutableArray<T>, int)>
+{
+    public bool Equals((ImmutableArray<T>, int) x, (ImmutableArray<T>, int) y)
+    {
+        return x.Item1.SequenceEqual(y.Item1) && x.Item2 == y.Item2;
+    }
+
+    public int GetHashCode((ImmutableArray<T>, int) obj)
+    {
+        int hashcode = 0;
+        foreach (T t in obj.Item1)
+        {
+            hashcode ^= t!.GetHashCode();
+        }
+        return hashcode ^= obj.Item2;
+    }
+}
+
 public partial class Day21(IFileLoader loader, IOptions<SolutionOptions> options) : ISolution
 {
     public int Day => 21;
@@ -105,7 +123,7 @@ public partial class Day21(IFileLoader loader, IOptions<SolutionOptions> options
         return end;
     }
 
-    private static readonly Dictionary<(ImmutableArray<Actions> keyPadPath, int depth), long> PushesMemo = [];
+    private static readonly Dictionary<(ImmutableArray<Actions>, int), long> PushesMemo = new(new ImmutableArrayComparer<Actions>());
     private static long CountPushes(List<Actions> keyPadPath, int depth, Grid<char> arrowPad)
     {
         var cacheKey = (keyPadPath.ToImmutableArray(), depth);
@@ -143,14 +161,11 @@ public partial class Day21(IFileLoader loader, IOptions<SolutionOptions> options
         return PushesMemo[cacheKey] = total;
     }
 
-    private static readonly Dictionary<(ImmutableArray<Actions> arrowPath, int depth), long> RoadMemo = [];
+    private static readonly Dictionary<(ImmutableArray<Actions>, int), long> RoadMemo = new(new ImmutableArrayComparer<Actions>());
     private static long CountPushesRoad(List<Actions> arrowPath, int depth, Grid<char> arrowPad)
     {
         var cacheKey = (arrowPath.ToImmutableArray(), depth);
-        if (RoadMemo.TryGetValue(cacheKey, out var memoValue))
-        {
-            return memoValue;
-        }
+        if (RoadMemo.TryGetValue(cacheKey, out var memoValue))return memoValue;
 
         if (depth is 0)
         {
